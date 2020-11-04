@@ -50,11 +50,10 @@ class LinkableSiteTreeExtension extends DataExtension
             if ($siteTreeID) {
               $page = Page::get()->byId($siteTreeID);
               if ($page) {
-                $arr = $page->ElementArea()->AllElements()->sort('Sort ASC')->map('ID', 'DropdownTitle');
-                return $arr->unshift(0 , '');
+                return $page->ElementArea()->AllElements()->sort('Sort ASC')->map('ID', 'DropdownTitle')->toArray();
               }
             }
-            return [];
+            return [0 => ''];
         };
         // Site tree field as a combination of tree drop down and anchor text field
         $siteTreeField = DisplayLogicWrapper::create(
@@ -64,15 +63,18 @@ class LinkableSiteTreeExtension extends DataExtension
                 'SiteTree'
             ),
             $anchorType = DropdownField::create('AnchorType', _t('Linkable.ANCHORTYPE', 'Anchor type'), $anchor_types),
-            $anchorElement = DependentDropdownField::create('AnchorElementID', _t('Linkable.ANCHORELEMENT', 'Anchor/Element'), $elementsSource)->setDepends($siteTree),
+            $anchorElement = DependentDropdownField::create('AnchorElementID', _t('Linkable.ANCHORELEMENT', 'Anchor/Element'), $elementsSource)
+                ->setHasEmptyDefault(true)
+                ->setUnselectedString('unselected')
+                ->setDepends($siteTree),
             $anchor = TextField::create(
                 'Anchor',
                 _t('Linkable.ANCHOR', 'Anchor/Querystring')
             )->setRightTitle(_t('Linkable.ANCHORINFO', 'Include # at the start of your anchor name or, ? at the start of your querystring'))
         )->displayIf("Type")->isEqualTo("SiteTree")->end();
 
-        $anchor->displayIf("AnchorType")->isEqualTo(0);
-        $anchorElement->displayIf("AnchorType")->isEqualTo(1);
+        $anchor->displayIf("AnchorType")->isEqualTo(0)->end();
+        $anchorElement->displayIf("AnchorType")->isEqualTo(1)->end();
 
         // Insert site tree field after the file selection field
         $fields->insertAfter('Type', $siteTreeField);
